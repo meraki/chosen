@@ -64,31 +64,21 @@
       return this.choices = 0;
     };
     Chosen.prototype.set_up_html = function() {
-      var dd_top, dd_width, sf_width;
       this.container_id = this.form_field.id.length ? this.form_field.id.replace(/(:|\.)/g, '_') : this.generate_field_id();
       this.container_id += "_chzn";
-      this.f_width = this.form_field_jq.width();
       this.default_text = this.form_field_jq.data('placeholder') ? this.form_field_jq.data('placeholder') : this.default_text_default;
-      this.container_div = $("<div />", {
+      this.container = $("<div />", {
         id: this.container_id,
-        "class": "chzn-container " + (this.is_rtl ? 'chzn-rtl' : ''),
-        style: 'width: ' + this.f_width + 'px;'
+        "class": "chzn-container " + (this.is_rtl ? 'chzn-rtl' : '')
       });
       if (this.is_multiple) {
-        this.container_div.html('<ul class="chzn-choices"><li class="search-field"><input type="text" value="' + this.default_text + '" class="default" autocomplete="off" style="width:25px;" /></li></ul><div class="chzn-drop" style="left:-9000px;"><ul class="chzn-results"></ul></div>');
+        this.container.html('<ul class="chzn-choices"><li class="search-field"><input type="text" value="' + this.default_text + '" class="default" autocomplete="off" /></li></ul><div class="chzn-drop" style="left:-9000px;"><ul class="chzn-results"></ul></div>');
       } else {
-        this.container_div.html('<a href="javascript:void(0)" class="chzn-single"><span>' + this.default_text + '</span><div><b></b></div></a><div class="chzn-drop" style="left:-9000px;"><div class="chzn-search"><input type="text" autocomplete="off" /></div><ul class="chzn-results"></ul></div>');
+        this.container.html('<a href="javascript:void(0)" class="chzn-single"><span>' + this.default_text + '</span><div><b></b></div></a><div class="chzn-drop" style="left:-9000px;"><div class="chzn-search"><input type="text" autocomplete="off" /></div><ul class="chzn-results"></ul></div>');
       }
-      this.form_field_jq.hide().after(this.container_div);
-      this.container = $('#' + this.container_id);
+      this.form_field_jq.hide().after(this.container);
       this.container.addClass("chzn-container-" + (this.is_multiple ? "multi" : "single"));
       this.dropdown = this.container.find('div.chzn-drop').first();
-      dd_top = this.container.height();
-      dd_width = this.f_width - get_side_border_padding(this.dropdown);
-      this.dropdown.css({
-        "width": dd_width + "px",
-        "top": dd_top + "px"
-      });
       this.search_field = this.container.find('input').first();
       this.search_results = this.container.find('ul.chzn-results').first();
       this.search_field_scale();
@@ -99,10 +89,6 @@
       } else {
         this.search_container = this.container.find('div.chzn-search').first();
         this.selected_item = this.container.find('.chzn-single').first();
-        sf_width = dd_width - get_side_border_padding(this.search_container) - get_side_border_padding(this.search_field);
-        this.search_field.css({
-          "width": sf_width + "px"
-        });
       }
       this.results_build();
       return this.set_tab_index();
@@ -156,7 +142,7 @@
     };
     Chosen.prototype.remove_html = function() {
       this.form_field_jq.show();
-      return this.container_div.remove();
+      return this.container.remove();
     };
     Chosen.prototype.container_click = function(evt) {
       if (evt && evt.type === "click") {
@@ -327,7 +313,7 @@
       }
     };
     Chosen.prototype.results_show = function() {
-      var dd_top;
+      var dd_top, dd_width, sf_width;
       if (!this.is_multiple) {
         this.selected_item.addClass("chzn-single-with-drop");
         if (this.result_single_selected) {
@@ -335,10 +321,13 @@
         }
       }
       dd_top = this.is_multiple ? this.container.height() : this.container.height() - 1;
+      dd_width = this.container.outerWidth() - get_side_border_padding(this.dropdown);
       this.dropdown.css({
-        "top": dd_top + "px",
+        "width": dd_width + "px",
+        "top": dd_top,
         "left": 0
       });
+      sf_width = dd_width - get_side_border_padding(this.search_container);
       this.results_showing = true;
       this.search_field.focus();
       this.search_field.val(this.search_field.val());
