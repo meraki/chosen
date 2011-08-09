@@ -6,12 +6,12 @@ root = this
 $ = jQuery
 
 $.fn.extend({
-  chosen: (data, options) ->
+  chosen: (options) ->
     $(this).each((input_field) ->
       element = ($ this)
       chosen = element.data("chosen")
       if not chosen
-        chosen = new Chosen(this, data, options)
+        chosen = new Chosen(this, options)
         element.data "chosen", chosen
       return chosen
     )
@@ -28,7 +28,13 @@ $.fn.extend({
 
 class Chosen
 
-  constructor: (elmn) ->
+  constructor: (elmn, options) ->
+    @settings =
+      defaultText: "Select some options"
+      defaultTextSingle: "Select an option"
+      noResultsText: "No results match \"{0}\""
+
+    $.extend(this.settings, options)
     this.set_default_values()
     
     @form_field = elmn
@@ -36,7 +42,7 @@ class Chosen
     @is_multiple = @form_field.multiple
     @is_rtl = @form_field_jq.hasClass "chzn-rtl"
 
-    @default_text_default = if @form_field.multiple then "Select Some Options" else "Select an Option"
+    @default_text_default = if @form_field.multiple then @settings.defaultText else @settings.defaultTextSingle
 
     this.set_up_html()
     this.register_observers()
@@ -482,11 +488,8 @@ class Chosen
       this.result_do_highlight do_high if do_high?
   
   no_results: (terms) ->
-    no_results_html = $('<li class="no-results">No results match "<span></span>"</li>')
-    no_results_html.find("span").first().html(terms)
+    @search_results.append $(('<li class="no-results">' + @settings.noResultsText + '</li>').replace('{0}', terms))
 
-    @search_results.append no_results_html
-  
   no_results_clear: ->
     @search_results.find(".no-results").remove()
 
