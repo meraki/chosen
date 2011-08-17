@@ -13,7 +13,6 @@ $.fn.extend({
       if not chosen
         chosen = new Chosen(this, options)
         element.data "chosen", chosen
-      return chosen
     )
   unchosen: ->
     $(this).each((input_field) ->
@@ -22,7 +21,6 @@ $.fn.extend({
       if chosen
         chosen.remove()
         element.data("chosen", null)
-      return element
     )
 })
 
@@ -38,7 +36,7 @@ class Chosen
     this.set_default_values()
     
     @form_field = elmn
-    @form_field_jq = $ @form_field
+    @form_field_jq = $(@form_field).addClass("chosen-active")
     @is_multiple = @form_field.multiple
     @is_rtl = @form_field_jq.hasClass "chzn-rtl"
 
@@ -94,6 +92,8 @@ class Chosen
     this.set_tab_index()
 
   register_observers: ->
+    @dispatcher = $({})
+
     @container.click (evt) => this.container_click(evt)
     @container.mouseenter (evt) => this.mouse_enter(evt)
     @container.mouseleave (evt) => this.mouse_leave(evt)
@@ -120,6 +120,14 @@ class Chosen
   remove_html: ->
     @form_field_jq.show()
     @container.remove()
+
+  trigger: ->
+    @dispatcher.trigger.apply(@dispatcher, arguments)
+    this
+
+  bind: ->
+    @dispatcher.bind.apply(@dispatcher, arguments)
+    this
 
   container_click: (evt) ->
     if evt and evt.type is "click"
@@ -161,7 +169,9 @@ class Chosen
     @active_field = false
     this.results_hide()
 
+    @trigger "hide"
     @container.removeClass "chzn-container-active"
+
     this.winnow_results_clear()
     this.clear_backstroke()
 
@@ -173,6 +183,7 @@ class Chosen
       @search_field.attr "tabindex", (@selected_item.attr "tabindex")
       @selected_item.attr "tabindex", -1
 
+    @trigger "show"
     @container.addClass "chzn-container-active"
     @active_field = true
 
@@ -277,6 +288,7 @@ class Chosen
     dd_top = if @is_multiple then @container.height() else (@container.height() - 1)
     dd_width = @container.outerWidth() - get_side_border_padding(@dropdown)
     @dropdown.css( {"width": dd_width + "px", "top":  dd_top, "left":0} )
+    @container.addClass('chzn-showing')
 
     sf_width = dd_width - get_side_border_padding(@search_container)
     #@search_field.css( {"width" : sf_width + "px"} )
@@ -291,7 +303,8 @@ class Chosen
   results_hide: ->
     @selected_item.removeClass "chzn-single-with-drop" unless @is_multiple
     this.result_clear_highlight()
-    @dropdown.css {"left":"-9000px"}
+    @dropdown.css({"left":"-9000px"})
+    @container.removeClass('chzn-showing')
     @results_showing = false
 
 
@@ -497,6 +510,7 @@ class Chosen
     this.reset_tab_index()
     this.unregister_observers()
     this.remove_html()
+    @form_field_jq.removeClass("chosen-active")
 
   keydown_arrow: ->
     if not @result_highlight

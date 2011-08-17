@@ -23,9 +23,8 @@
         chosen = element.data("chosen");
         if (!chosen) {
           chosen = new Chosen(this, options);
-          element.data("chosen", chosen);
+          return element.data("chosen", chosen);
         }
-        return chosen;
       });
     },
     unchosen: function() {
@@ -35,9 +34,8 @@
         chosen = element.data("chosen");
         if (chosen) {
           chosen.remove();
-          element.data("chosen", null);
+          return element.data("chosen", null);
         }
-        return element;
       });
     }
   });
@@ -51,7 +49,7 @@
       $.extend(this.settings, options);
       this.set_default_values();
       this.form_field = elmn;
-      this.form_field_jq = $(this.form_field);
+      this.form_field_jq = $(this.form_field).addClass("chosen-active");
       this.is_multiple = this.form_field.multiple;
       this.is_rtl = this.form_field_jq.hasClass("chzn-rtl");
       this.default_text_default = this.form_field.multiple ? this.settings.defaultText : this.settings.defaultTextSingle;
@@ -100,6 +98,7 @@
       return this.set_tab_index();
     };
     Chosen.prototype.register_observers = function() {
+      this.dispatcher = $({});
       this.container.click(__bind(function(evt) {
         return this.container_click(evt);
       }, this));
@@ -149,6 +148,14 @@
     Chosen.prototype.remove_html = function() {
       this.form_field_jq.show();
       return this.container.remove();
+    };
+    Chosen.prototype.trigger = function() {
+      this.dispatcher.trigger.apply(this.dispatcher, arguments);
+      return this;
+    };
+    Chosen.prototype.bind = function() {
+      this.dispatcher.bind.apply(this.dispatcher, arguments);
+      return this;
     };
     Chosen.prototype.container_click = function(evt) {
       if (evt && evt.type === "click") {
@@ -204,6 +211,7 @@
       }
       this.active_field = false;
       this.results_hide();
+      this.trigger("hide");
       this.container.removeClass("chzn-container-active");
       this.winnow_results_clear();
       this.clear_backstroke();
@@ -215,6 +223,7 @@
         this.search_field.attr("tabindex", this.selected_item.attr("tabindex"));
         this.selected_item.attr("tabindex", -1);
       }
+      this.trigger("show");
       this.container.addClass("chzn-container-active");
       this.active_field = true;
       this.search_field.val(this.search_field.val());
@@ -333,6 +342,7 @@
         "top": dd_top,
         "left": 0
       });
+      this.container.addClass('chzn-showing');
       sf_width = dd_width - get_side_border_padding(this.search_container);
       this.results_showing = true;
       this.search_field.focus();
@@ -347,6 +357,7 @@
       this.dropdown.css({
         "left": "-9000px"
       });
+      this.container.removeClass('chzn-showing');
       return this.results_showing = false;
     };
     Chosen.prototype.set_tab_index = function(el) {
@@ -572,7 +583,8 @@
     Chosen.prototype.remove = function() {
       this.reset_tab_index();
       this.unregister_observers();
-      return this.remove_html();
+      this.remove_html();
+      return this.form_field_jq.removeClass("chosen-active");
     };
     Chosen.prototype.keydown_arrow = function() {
       var first_active, next_sib;
