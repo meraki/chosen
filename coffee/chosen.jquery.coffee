@@ -345,16 +345,18 @@ class Chosen
   search_results_mouseout: (evt) ->
     this.result_clear_highlight() if $(evt.target).hasClass "active-result" or $(evt.target).parents('.active-result').first()
 
-
   choices_click: (evt) ->
     evt.preventDefault()
-    if( @active_field and not($(evt.target).hasClass "search-choice" or $(evt.target).parents('.search-choice').first) and not @results_showing )
+    $choice = $(evt.target).parents('.search-choice')
+    if($choice.length)
+      @focus_choice($choice)
+    else if( @active_field and (not @results_showing) )
       this.results_show()
 
   choice_build: (item) ->
     choice_id = @container_id + "_c_" + item.array_index
     @choices += 1
-    @search_container.before  '<li class="search-choice" id="' + choice_id + '"><span>' + item.html + '</span><a href="javascript:void(0)" class="search-choice-close" rel="' + item.array_index + '"></a></li>'
+    @search_container.before  '<li class="search-choice" id="' + choice_id + '" title="' + item.html + '"><span>' + item.html + '</span><a href="javascript:void(0)" class="search-choice-close" rel="' + item.array_index + '"></a></li>'
     link = @search_container.parent().find('#' + choice_id).find("a").first()
     link.click (evt) => this.choice_destroy_link_click(evt)
 
@@ -538,12 +540,16 @@ class Chosen
       this.choice_destroy @pending_backstroke.find("a").first()
       this.clear_backstroke()
     else
-      @pending_backstroke = @search_container.siblings("li.search-choice").last()
-      @pending_backstroke.addClass "search-choice-focus"
+      @focus_choice(@search_container.siblings("li.search-choice").last())
 
   clear_backstroke: ->
     @pending_backstroke.removeClass "search-choice-focus" if @pending_backstroke
     @pending_backstroke = null
+
+  focus_choice: ($el) ->
+    if @pending_backstroke
+      @pending_backstroke.removeClass "search-choice-focus"
+    @pending_backstroke = $el.addClass "search-choice-focus"
 
   keyup_checker: (evt) ->
     stroke = evt.which ? evt.keyCode

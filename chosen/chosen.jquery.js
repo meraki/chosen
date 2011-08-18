@@ -409,8 +409,12 @@
       }
     };
     Chosen.prototype.choices_click = function(evt) {
+      var $choice;
       evt.preventDefault();
-      if (this.active_field && !($(evt.target).hasClass("search-choice" || $(evt.target).parents('.search-choice').first)) && !this.results_showing) {
+      $choice = $(evt.target).parents('.search-choice');
+      if ($choice.length) {
+        return this.focus_choice($choice);
+      } else if (this.active_field && (!this.results_showing)) {
         return this.results_show();
       }
     };
@@ -418,7 +422,7 @@
       var choice_id, link;
       choice_id = this.container_id + "_c_" + item.array_index;
       this.choices += 1;
-      this.search_container.before('<li class="search-choice" id="' + choice_id + '"><span>' + item.html + '</span><a href="javascript:void(0)" class="search-choice-close" rel="' + item.array_index + '"></a></li>');
+      this.search_container.before('<li class="search-choice" id="' + choice_id + '" title="' + item.html + '"><span>' + item.html + '</span><a href="javascript:void(0)" class="search-choice-close" rel="' + item.array_index + '"></a></li>');
       link = this.search_container.parent().find('#' + choice_id).find("a").first();
       return link.click(__bind(function(evt) {
         return this.choice_destroy_link_click(evt);
@@ -624,8 +628,7 @@
         this.choice_destroy(this.pending_backstroke.find("a").first());
         return this.clear_backstroke();
       } else {
-        this.pending_backstroke = this.search_container.siblings("li.search-choice").last();
-        return this.pending_backstroke.addClass("search-choice-focus");
+        return this.focus_choice(this.search_container.siblings("li.search-choice").last());
       }
     };
     Chosen.prototype.clear_backstroke = function() {
@@ -633,6 +636,12 @@
         this.pending_backstroke.removeClass("search-choice-focus");
       }
       return this.pending_backstroke = null;
+    };
+    Chosen.prototype.focus_choice = function($el) {
+      if (this.pending_backstroke) {
+        this.pending_backstroke.removeClass("search-choice-focus");
+      }
+      return this.pending_backstroke = $el.addClass("search-choice-focus");
     };
     Chosen.prototype.keyup_checker = function(evt) {
       var stroke, _ref;
