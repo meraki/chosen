@@ -45,7 +45,6 @@ class Chosen extends AbstractChosen
     @form_field_jq.hide().after container_div
     @container = ($ '#' + @container_id)
     @container.addClass( "chzn-container-" + (if @is_multiple then "multi" else "single") )
-    @container.addClass "chzn-container-single-nosearch" if not @is_multiple and @form_field.options.length <= @disable_search_threshold
     @dropdown = @container.find('div.chzn-drop').first()
     
     dd_top = @container.height()
@@ -70,7 +69,7 @@ class Chosen extends AbstractChosen
     
     this.results_build()
     this.set_tab_index()
-
+    @form_field_jq.trigger("liszt:ready", {chosen: this})
 
   register_observers: ->
     @container.mousedown (evt) => this.container_mousedown(evt)
@@ -93,15 +92,15 @@ class Chosen extends AbstractChosen
       @search_field.focus (evt) => this.input_focus(evt)
 
   search_field_disabled: ->
-    @is_disabled = @form_field_jq.attr 'disabled'
+    @is_disabled = @form_field_jq[0].disabled
     if(@is_disabled)
       @container.addClass 'chzn-disabled'
-      @search_field.attr 'disabled', true
+      @search_field[0].disabled = true
       @selected_item.unbind "focus", @activate_action if !@is_multiple
       this.close_field()
     else
       @container.removeClass 'chzn-disabled'
-      @search_field.attr 'disabled', false
+      @search_field[0].disabled = false
       @selected_item.bind "focus", @activate_action if !@is_multiple
 
   container_mousedown: (evt) ->
@@ -114,7 +113,7 @@ class Chosen extends AbstractChosen
           @search_field.val "" if @is_multiple
           $(document).click @click_test_action
           this.results_show()
-        else if not @is_multiple and evt and ($(evt.target) is @selected_item || $(evt.target).parents("a.chzn-single").length)
+        else if not @is_multiple and evt and (($(evt.target)[0] == @selected_item[0]) || $(evt.target).parents("a.chzn-single").length)
           evt.preventDefault()
           this.results_toggle()
 
@@ -164,7 +163,6 @@ class Chosen extends AbstractChosen
       this.close_field()
     
   results_build: ->
-    startTime = new Date()
     @parsing = true
     @results_data = root.SelectParser.select_to_array @form_field
 
@@ -173,6 +171,10 @@ class Chosen extends AbstractChosen
       @choices = 0
     else if not @is_multiple
       @selected_item.find("span").text @default_text
+      if @form_field.options.length <= @disable_search_threshold
+        @container.addClass "chzn-container-single-nosearch"
+      else
+        @container.removeClass "chzn-container-single-nosearch"
 
     content = ''
     for data in @results_data
@@ -374,7 +376,6 @@ class Chosen extends AbstractChosen
     @selected_item.find("span").first().after "<abbr class=\"search-choice-close\"></abbr>" if @allow_single_deselect and @selected_item.find("abbr").length < 1
 
   winnow_results: ->
-    startTime = new Date()
     this.no_results_clear()
     
     results = 0
@@ -386,10 +387,11 @@ class Chosen extends AbstractChosen
     for option in @results_data
       if not option.disabled and not option.empty
         if option.group
-          $('#' + option.dom_id).hide()
+          $('#' + option.dom_id).css('display', 'none')
         else if not (@is_multiple and option.selected)
           found = false
           result_id = option.dom_id
+          result = $("#" + result_id)
           
           if regex.test option.html
             found = true
@@ -410,16 +412,15 @@ class Chosen extends AbstractChosen
               text = text.substr(0, startpos) + '<em>' + text.substr(startpos)
             else
               text = option.html
+            
+            result.html(text)
+            this.result_activate result
 
-            $("#" + result_id).html text if $("#" + result_id).html != text
-
-            this.result_activate $("#" + result_id)
-
-            $("#" + @results_data[option.group_array_index].dom_id).show() if option.group_array_index?
+            $("#" + @results_data[option.group_array_index].dom_id).css('display', 'list-item') if option.group_array_index?
           else
             this.result_clear_highlight() if @result_highlight and result_id is @result_highlight.attr 'id'
-            this.result_deactivate $("#" + result_id)
-    
+            this.result_deactivate result
+
     if results < 1 and searchText.length
       this.no_results searchText
     else
@@ -432,7 +433,7 @@ class Chosen extends AbstractChosen
     for li in lis
       li = $(li)
       if li.hasClass "group-result"
-        li.show()
+        li.css('display', 'auto')
       else if not @is_multiple or not li.hasClass "result-selected"
         this.result_activate li
 
@@ -497,6 +498,7 @@ class Chosen extends AbstractChosen
         @backstroke_length = this.search_field.val().length
         break
       when 9
+        this.result_select(evt) if this.results_showing and not @is_multiple
         @mouse_on_container = false
         break
       when 13

@@ -127,7 +127,7 @@
       this.results_showing = false;
       this.result_highlighted = null;
       this.result_single_selected = null;
-      this.allow_single_deselect = (this.options.allow_single_deselect != null) && this.form_field.options[0].text === "" ? this.options.allow_single_deselect : false;
+      this.allow_single_deselect = (this.options.allow_single_deselect != null) && (this.form_field.options[0] != null) && this.form_field.options[0].text === "" ? this.options.allow_single_deselect : false;
       this.disable_search_threshold = this.options.disable_search_threshold || 0;
       this.choices = 0;
       return this.results_none_found = this.options.no_results_text || "No results match";
@@ -306,9 +306,6 @@
       });
       this.container = $(this.container_id);
       this.container.addClassName("chzn-container-" + (this.is_multiple ? "multi" : "single"));
-      if (!this.is_multiple && this.form_field.options.length <= this.disable_search_threshold) {
-        this.container.addClassName("chzn-container-single-nosearch");
-      }
       this.dropdown = this.container.down('div.chzn-drop');
       dd_top = this.container.getHeight();
       dd_width = this.f_width - get_side_border_padding(this.dropdown);
@@ -332,7 +329,10 @@
         });
       }
       this.results_build();
-      return this.set_tab_index();
+      this.set_tab_index();
+      return this.form_field.fire("liszt:ready", {
+        chosen: this
+      });
     };
 
     Chosen.prototype.register_observers = function() {
@@ -463,8 +463,7 @@
     };
 
     Chosen.prototype.results_build = function() {
-      var content, data, startTime, _i, _len, _ref;
-      startTime = new Date();
+      var content, data, _i, _len, _ref;
       this.parsing = true;
       this.results_data = root.SelectParser.select_to_array(this.form_field);
       if (this.is_multiple && this.choices > 0) {
@@ -472,6 +471,11 @@
         this.choices = 0;
       } else if (!this.is_multiple) {
         this.selected_item.down("span").update(this.default_text);
+        if (this.form_field.options.length <= this.disable_search_threshold) {
+          this.container.addClassName("chzn-container-single-nosearch");
+        } else {
+          this.container.removeClassName("chzn-container-single-nosearch");
+        }
       }
       content = '';
       _ref = this.results_data;
@@ -717,8 +721,7 @@
     };
 
     Chosen.prototype.winnow_results = function() {
-      var found, option, part, parts, regex, result_id, results, searchText, startTime, startpos, text, zregex, _i, _j, _len, _len2, _ref;
-      startTime = new Date();
+      var found, option, part, parts, regex, result_id, results, searchText, startpos, text, zregex, _i, _j, _len, _len2, _ref;
       this.no_results_clear();
       results = 0;
       searchText = this.search_field.value === this.default_text ? "" : this.search_field.value.strip().escapeHTML();
@@ -759,7 +762,9 @@
               if ($(result_id).innerHTML !== text) $(result_id).update(text);
               this.result_activate($(result_id));
               if (option.group_array_index != null) {
-                $(this.results_data[option.group_array_index].dom_id).show();
+                $(this.results_data[option.group_array_index].dom_id).setStyle({
+                  display: 'list-item'
+                });
               }
             } else {
               if ($(result_id) === this.result_highlight) {
@@ -880,16 +885,22 @@
       if (stroke !== 8 && this.pending_backstroke) this.clear_backstroke();
       switch (stroke) {
         case 8:
-          return this.backstroke_length = this.search_field.value.length;
+          this.backstroke_length = this.search_field.value.length;
+          break;
         case 9:
-          return this.mouse_on_container = false;
+          if (this.results_showing && !this.is_multiple) this.result_select(evt);
+          this.mouse_on_container = false;
+          break;
         case 13:
-          return evt.preventDefault();
+          evt.preventDefault();
+          break;
         case 38:
           evt.preventDefault();
-          return this.keyup_arrow();
+          this.keyup_arrow();
+          break;
         case 40:
-          return this.keydown_arrow();
+          this.keydown_arrow();
+          break;
       }
     };
 
