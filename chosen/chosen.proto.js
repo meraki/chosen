@@ -130,7 +130,10 @@
       this.allow_single_deselect = (this.options.allow_single_deselect != null) && (this.form_field.options[0] != null) && this.form_field.options[0].text === "" ? this.options.allow_single_deselect : false;
       this.disable_search_threshold = this.options.disable_search_threshold || 0;
       this.choices = 0;
-      return this.results_none_found = this.options.no_results_text || "No results match";
+      this.results_none_found = this.options.no_results_text || "No results match";
+      this.create_option = this.options.create_option || false;
+      this.persistent_create_option = this.options.persistent_create_option || false;
+      return this.create_option_text = this.options.create_option_text || "Add option";
     };
 
     AbstractChosen.prototype.mouse_enter = function() {
@@ -283,7 +286,9 @@
       this.single_temp = new Template('<a href="javascript:void(0)" class="chzn-single"><span>#{default}</span><div><b></b></div></a><div class="chzn-drop" style="left:-9000px;"><div class="chzn-search"><input type="text" autocomplete="off" /></div><ul class="chzn-results"></ul></div>');
       this.multi_temp = new Template('<ul class="chzn-choices"><li class="search-field"><input type="text" value="#{default}" class="default" autocomplete="off" style="width:25px;" /></li></ul><div class="chzn-drop" style="left:-9000px;"><ul class="chzn-results"></ul></div>');
       this.choice_temp = new Template('<li class="search-choice" id="#{id}"><span>#{choice}</span><a href="javascript:void(0)" class="search-choice-close" rel="#{position}"></a></li>');
-      return this.no_results_temp = new Template('<li class="no-results">' + this.results_none_found + ' "<span>#{terms}</span>"</li>');
+      this.no_results_temp = new Template('<li class="no-results">' + this.results_none_found + ' "<span>#{terms}</span>".#{add_item_link}</li>');
+      this.new_option_temp = new Template('<option value="#{value}">#{html}</option>');
+      return this.add_link_temp = new Template(' <a href="javascript:void(0);" class="option-add">' + this.add_option_text + '</a>');
     };
 
     Chosen.prototype.set_up_html = function() {
@@ -813,10 +818,44 @@
       }
     };
 
-    Chosen.prototype.no_results = function(terms) {
-      return this.search_results.insert(this.no_results_temp.evaluate({
-        terms: terms
+    Chosen.prototype.no_results = function(terms, selected) {
+      var add_item_link;
+      var _this = this;
+      add_item_link = '';
+      if (this.add_option && !selected) {
+        add_item_link = this.add_link_temp.evaluate();
+      }
+      this.search_results.insert(this.no_results_temp.evaluate({
+        terms: terms,
+        add_item_link: add_item_link
       }));
+      if (this.options.addOption && !selected) {
+        return this.search_results.down("a.option-add").observe("click", function(evt) {
+          if (!selected) return _this.select_add_option(terms);
+        });
+      }
+    };
+
+    Chosen.prototype.select_add_option = function(terms) {
+      if (Object.isFunction(this.add_option)) {
+        return this.add_option.call(this, terms, this.select_append_option);
+      } else {
+        return this.select_append_option({
+          value: terms,
+          text: terms
+        });
+      }
+    };
+
+    Chosen.prototype.select_append_option = function(options) {
+      /*
+            TODO Close options after adding
+      */
+      var option;
+      option = this.new_option_temp.evaluate(options);
+      this.form_field.insert(option);
+      Event.fire(this.form_field, "liszt:updated");
+      return this.result_select();
     };
 
     Chosen.prototype.no_results_clear = function() {

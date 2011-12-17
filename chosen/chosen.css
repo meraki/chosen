@@ -264,6 +264,10 @@
   background: #f4f4f4;
   display: list-item;
 }
+.chzn-container .chzn-results .create-option {
+  background: #f4f4f4;
+  display: list-item;
+}
 .chzn-container .chzn-results .group-result {
   cursor: default;
   color: #999;
@@ -347,6 +351,10 @@
   -webkit-border-radius: 4px 0 0 4px;
   -moz-border-radius   : 4px 0 0 4px;
   border-radius        : 4px 0 0 4px; 
+}
+.chzn-rtl .chzn-single abbr {
+  left: 26px;
+  right: auto;
 }
 .chzn-rtl .chzn-choices li { float: right; }
 .chzn-rtl .chzn-choices .search-choice { padding: 3px 6px 3px 19px; margin: 3px 5px 3px 0; }
