@@ -1,3 +1,16 @@
+.chzn-add-button {
+  float: right;
+  margin: 0;
+  margin-top: -4px;
+  margin-right: -5px;
+  width: 14px;
+  height: 14px;
+  background: url('chosen-sprite.png') no-repeat 0px -46px;
+}
+.chzn-add-button:hover {
+  background: url('chosen-sprite.png') no-repeat -15px -46px;
+}
+
 /* @group Base */
 .chzn-container {
   font-size: 13px;

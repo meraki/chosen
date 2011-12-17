@@ -285,6 +285,7 @@
 
     Chosen.prototype.setup = function() {
       this.form_field_jq = $(this.form_field);
+      this.allows_new_values = $(this.form_field).attr('data-allows-new-values');
       return this.is_rtl = this.form_field_jq.hasClass("chzn-rtl");
     };
 
@@ -689,6 +690,8 @@
         this.search_field.val("");
         this.form_field_jq.trigger("change");
         return this.search_field_scale();
+      } else if (this.allows_new_values) {
+        return this.add_and_select_new_value(this, this.search_field.val());
       }
     };
 
@@ -809,14 +812,37 @@
     };
 
     Chosen.prototype.no_results = function(terms) {
-      var no_results_html;
-      no_results_html = $('<li class="no-results">' + this.results_none_found + ' "<span></span>"</li>');
+      var button_html, no_results_html, that;
+      button_html = '';
+      if (this.allows_new_values) {
+        button_html = '<div class="chzn-add-button"></div>';
+      }
+      no_results_html = $('<li class="no-results">' + this.results_none_found + ' "<span></span>"' + button_html + '</li>');
       no_results_html.find("span").first().html(terms);
+      if (this.allows_new_values) {
+        that = this;
+        no_results_html.find(".chzn-add-button").first().click(function(evt) {
+          that.add_and_select_new_value(that, terms);
+          return false;
+        });
+      }
       return this.search_results.append(no_results_html);
     };
 
     Chosen.prototype.no_results_clear = function() {
       return this.search_results.find(".no-results").remove();
+    };
+
+    Chosen.prototype.add_and_select_new_value = function(that, terms) {
+      var searchText;
+      $(that.form_field).append('<option value="' + terms + '">' + terms + '</option>');
+      searchText = that.search_field.val();
+      that.results_build();
+      that.search_field.val(searchText);
+      that.results_show();
+      that.results_search();
+      that.result_select($(that.form_field.options).last());
+      return that.close_field();
     };
 
     Chosen.prototype.keydown_arrow = function() {
