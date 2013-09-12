@@ -161,7 +161,7 @@ $chosen-sprite-retina: image-url('chosen-sprite@2x.png');
       @include background-image(linear-gradient(#3875d7 20%, #2a62bc 90%));
       color: #fff;
     }
-    &.no-results {
+    &.no-results, &.create-option {
       display: list-item;
       background: #f4f4f4;
     }

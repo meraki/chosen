@@ -399,11 +399,34 @@ class Chosen extends AbstractChosen
 
     this.result_do_highlight do_high if do_high?
 
-  no_results: (terms) ->
+  no_results: (terms, selected) ->
     no_results_html = $('<li class="no-results">' + @results_none_found + ' "<span></span>"</li>')
     no_results_html.find("span").first().html(terms)
 
     @search_results.append no_results_html
+
+    if @create_option #and not selected
+      this.show_create_option( terms )
+
+  show_create_option: (terms) ->
+    create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + @create_option_text + '</a>: "' + terms + '"</li>').bind "click", (evt) => this.select_create_option(terms)
+    @search_results.append create_option_html
+
+  create_option_clear: ->
+     @search_results.find(".create-option").remove()
+
+  select_create_option: (terms) ->
+    if $.isFunction(@create_option)
+      @create_option.call this, terms, this.select_append_option
+    else
+      this.select_append_option {value: terms, text: terms}
+
+  select_append_option: ( options ) ->
+    option = $('<option />', options ).attr('selected', 'selected')
+    @form_field_jq.append option
+    @form_field_jq.trigger "chosen:updated"
+    #@active_field = false
+    @search_field.trigger('focus')
 
   no_results_clear: ->
     @search_results.find(".no-results").remove()

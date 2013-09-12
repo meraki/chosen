@@ -134,6 +134,8 @@ class AbstractChosen
     regexAnchor = if @search_contains then "" else "^"
     regex = new RegExp(regexAnchor + escapedSearchText, 'i')
     zregex = new RegExp(escapedSearchText, 'i')
+    eregex = new RegExp("^" + escapedSearchText + "$", 'i')
+    exact_result = false
 
     for option in @results_data
 
@@ -156,6 +158,7 @@ class AbstractChosen
           option.search_text = if option.group then option.label else option.html
           option.search_match = this.search_string_match(option.search_text, regex)
           results += 1 if option.search_match and not option.group
+          exact_result = true if eregex.test option.search_text
 
           if option.search_match
             if searchText.length
@@ -175,6 +178,7 @@ class AbstractChosen
       this.no_results searchText
     else
       this.update_results_content this.results_option_build()
+      this.show_create_option( searchText ) if @create_option and not exact_result and @persistent_create_option and searchText.length
       this.winnow_results_set_highlight()
 
   search_string_match: (search_string, regex) ->
