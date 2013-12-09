@@ -417,7 +417,10 @@ class Chosen extends AbstractChosen
       this.show_create_option( terms )
 
   show_create_option: (terms) ->
-    create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + (@options.create_option_text||"Add option") + '</a>: "' + terms + '"</li>').bind "click", (evt) => this.select_create_option(terms)
+    create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + (@options.create_option_text||"Add option") + '</a>: "' + terms + '"</li>').bind "click", (evt) =>
+      this.select_create_option(terms)
+      this.close_field()
+      evt.stopPropagation()
     @search_results.append create_option_html
 
   create_option_clear: ->
