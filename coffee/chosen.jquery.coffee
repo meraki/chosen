@@ -95,6 +95,8 @@ class Chosen extends AbstractChosen
     @search_field.bind 'focus.chosen', (evt) => this.input_focus(evt); return
 
     if @is_multiple
+      if @options.create_option
+        @search_field.bind('paste.chosen', (evt) => this.handle_paste_multiple(evt))
       @search_choices.bind 'click.chosen', (evt) => this.choices_click(evt); return
     else
       @container.bind 'click.chosen', (evt) -> evt.preventDefault(); return # gobble click of anchor
@@ -363,6 +365,13 @@ class Chosen extends AbstractChosen
       @form_field_jq.trigger "change", {'selected': @form_field.options[item.options_index].value} if @is_multiple || @form_field.selectedIndex != @current_selectedIndex
       @current_selectedIndex = @form_field.selectedIndex
       this.search_field_scale()
+    else if @options.create_option == 'easy'
+      terms = $(".create-option").find("span").text()
+      if terms.trim()
+        this.select_create_option(terms)
+        this.close_field()
+        this.activate_field()
+        return
 
   single_set_selected_text: (text=@default_text) ->
     if text is @default_text
@@ -416,10 +425,18 @@ class Chosen extends AbstractChosen
     if @options.create_option #and not selected
       this.show_create_option( terms )
 
+  show_custom_results: (terms) ->
+    if $.isFunction(@options.custom_results)
+      custom_html = @options.custom_results.call this, terms, this.select_append_option, this
+      this.update_results_content(custom_html)
+    else
+      this.update_results_content(@options.custom_results)
+
   show_create_option: (terms) ->
-    create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + (@options.create_option_text||"Add option") + '</a>: "' + terms + '"</li>').bind "click", (evt) =>
+    create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + (@options.create_option_text||"Add option") + '</a>: "' + '<span>' + terms + '</span>' + '"</li>').bind "click", (evt) =>
       this.select_create_option(terms)
       this.close_field()
+      this.activate_field()
       evt.stopPropagation()
     @search_results.append create_option_html
 
@@ -435,8 +452,7 @@ class Chosen extends AbstractChosen
   select_append_option: ( options ) ->
     option = $('<option />', options ).attr('selected', 'selected')
     @form_field_jq.append option
-    @form_field_jq.trigger "chosen:updated"
-    @form_field_jq.trigger "change"
+    @form_field_jq.trigger("chosen:updated").trigger('change')
     #@active_field = false
     @search_field.trigger('focus')
 
