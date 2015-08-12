@@ -173,6 +173,10 @@ class AbstractChosen
 
     this.result_clear_highlight()
 
+    if @options.custom_results
+      this.show_custom_results(searchText)
+      return this.winnow_results_set_highlight()
+
     if results < 1 and searchText.length
       this.update_results_content ""
       this.no_results searchText

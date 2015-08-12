@@ -416,6 +416,13 @@ class Chosen extends AbstractChosen
     if @options.create_option #and not selected
       this.show_create_option( terms )
 
+  show_custom_results: (terms) ->
+    if $.isFunction(@options.custom_results)
+      custom_html = @options.custom_results.call this, terms, this.select_append_option, this
+      this.update_results_content(custom_html)
+    else
+      this.update_results_content(@options.custom_results)
+
   show_create_option: (terms) ->
     create_option_html = $('<li class="create-option"><a href="javascript:void(0);">' + (@options.create_option_text||"Add option") + '</a>: "' + terms + '"</li>').bind "click", (evt) =>
       this.select_create_option(terms)
