@@ -95,6 +95,8 @@ class Chosen extends AbstractChosen
     @search_field.bind 'focus.chosen', (evt) => this.input_focus(evt); return
 
     if @is_multiple
+      if @options.create_option
+        @search_field.bind('paste.chosen', (evt) => this.handle_paste_multiple(evt))
       @search_choices.bind 'click.chosen', (evt) => this.choices_click(evt); return
     else
       @container.bind 'click.chosen', (evt) -> evt.preventDefault(); return # gobble click of anchor

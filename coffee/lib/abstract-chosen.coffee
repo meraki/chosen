@@ -54,6 +54,29 @@ class AbstractChosen
       @active_field = false
       setTimeout (=> this.blur_test()), 100
 
+  handle_paste_multiple: (evt) ->
+    content = evt.originalEvent.clipboardData.getData('text')
+    if (content && content.match(/\n/))
+      evt.preventDefault()
+      evt.stopPropagation()
+
+      makeOrSelectOption = (item) =>
+        new_item = item.toString()
+        match_value = new_item.replace(/"/g, '\\"')
+        existing = @form_field_jq.find('option[value="' + match_value + '"]')
+        if (existing.length == 0)
+          option = $('<option />', { value: new_item, text: new_item }).prop('selected', true)
+          @form_field_jq.append(option)
+        else
+          existing.prop('selected', true)
+
+      lines = (line.replace(/^\s*|\s*$/g, '') for line in content.split(/\n/))
+      makeOrSelectOption(line) for line in lines when line.length > 0
+
+      @form_field_jq.trigger "chosen:updated"
+      @form_field_jq.trigger "change"
+      @search_field.trigger "focus"
+
   results_option_build: (options) ->
     content = ''
     for data in @results_data
