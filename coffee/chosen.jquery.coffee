@@ -452,7 +452,7 @@ class Chosen extends AbstractChosen
   select_append_option: ( options ) ->
     option = $('<option />', options ).attr('selected', 'selected')
     @form_field_jq.append option
-    @form_field_jq.trigger("chosen:updated").trigger('change')
+    @form_field_jq.trigger("chosen:updated").trigger('change', { add_options: [options.value] })
     #@active_field = false
     @search_field.trigger('focus')
 
