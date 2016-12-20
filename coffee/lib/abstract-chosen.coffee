@@ -81,10 +81,14 @@ class AbstractChosen
           existing.prop('selected', true)
 
       lines = (line.replace(/^\s*|\s*$/g, '') for line in content.split(/\n/))
-      makeOrSelectOption(line) for line in lines when line.length > 0
+      add_options = []
+      for line in lines
+        if line.length > 0
+          add_options.push(line)
+          makeOrSelectOption(line)
 
       @form_field_jq.trigger "chosen:updated"
-      @form_field_jq.trigger "change"
+      @form_field_jq.trigger("change", {add_options: add_options})
       @search_field.trigger "focus"
 
   results_option_build: (options) ->
