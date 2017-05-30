@@ -34,6 +34,10 @@ class AbstractChosen
     @include_group_label_in_selected = @options.include_group_label_in_selected || false
     @max_shown_results = @options.max_shown_results || Number.POSITIVE_INFINITY
 
+    # Change rendering for situations when there are A LOT (e.g. 1500) chosen fields
+    @mki_invisible_dropdown = @options.mki_invisible_dropdown || false
+    @mki_disable_touch = @options.mki_disable_touch || false
+
   set_default_text: ->
     if @form_field.getAttribute("data-placeholder")
       @default_text = @form_field.getAttribute("data-placeholder")
